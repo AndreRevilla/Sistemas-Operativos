@@ -1,0 +1,79 @@
+#include <stdio.h>
+#include <signal.h>
+#include <setjmp.h>
+#include <unistd.h>
+
+static sigjmp_buf punto_salto;
+
+void manejador(int signo)
+{
+    printf("\nSe recibió la señal %d\n", signo);
+
+    // Salto de ejecución al punto establecido con sigsetjmp()
+    siglongjmp(punto_salto, 1);
+}
+
+void manejador10(int signo)
+{
+    printf("\nSe recibió la señal SIGUSR1 %d\n", signo);
+
+    // Salto de ejecución al punto establecido con sigsetjmp()
+    siglongjmp(punto_salto, 10);
+}
+
+void manejador12(int signo)
+{
+    printf("\nSe recibió la señal SIGUSR2 %d\n", signo);
+
+    // Salto de ejecución al punto establecido con sigsetjmp()
+    siglongjmp(punto_salto, 12);
+}
+
+void manejador15(int signo)
+{
+    printf("\nSe recibió la señal SIGTERM %d\n", signo);
+
+    // Salto de ejecución al punto establecido con sigsetjmp()
+    siglongjmp(punto_salto, 15);
+}
+
+int main(void)
+{
+    // Registrar el manejador para SIGINT (Ctrl+C)
+    signal(SIGINT, manejador);
+    signal(SIGUSR1, manejador10);
+    signal(SIGUSR2, manejador12);
+    signal(SIGTERM, manejador15);
+    
+    while (1) {
+        int valor = sigsetjmp(punto_salto, 1);
+        if (valor == 0) {
+            printf("Programa iniciado.\n");
+        while (1){
+            printf("Ejecutando código normal...\n");
+            sleep(2);
+        }
+        } 
+    
+        else if (valor == 10) {
+            printf("¡Se realizó el salto de código SIGUSR1!\n");
+            printf("Continuando desde el punto de recuperación...\n");
+        } 
+        
+        else if (valor == 12) {
+            printf("¡Se realizó el salto de código SIGUSR2!\n");
+            printf("Continuando desde el punto de recuperación...\n");
+        }
+        
+        else if (valor == 15) {
+            printf("¡Se realizó el salto de código SIGTERM!\n");
+            printf("Continuando desde el punto de recuperación...\n");
+        }
+
+        else {
+            // La ejecución llega aquí después de recibir SIGINT
+            printf("¡Se realizó el salto de código!\n");
+            printf("Continuando desde el punto de recuperación...\n");
+        }
+    }
+}
