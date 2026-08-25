@@ -56,5 +56,5 @@ int main () {
 }
 
 void sighandler(int signum) {
-   printf("Caught signal %d, coming out...\n", signum);
+   printf("Caught signal %d, PID: %d, coming out...\n", signum, getpid());
 }
