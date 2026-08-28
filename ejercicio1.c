@@ -8,19 +8,19 @@ static sigjmp_buf salto_sigint;
 static sigjmp_buf salto_sigusr1;
 static sigjmp_buf salto_sigusr2;
 
-void handler_sigint(int signal)
+void handler_sigint(int)
 {
     printf("\n[ SIGINT recibida ]\n\n");
     printf(">>> Ejecutando salto no local #1 \n");
     siglongjmp(salto_sigint, 1);
 }
-void handler_sigusr1(int signal)
+void handler_sigusr1(int)
 {
     printf("\n[ SIGUSR1 recibida ]\n\n");
     printf(">>> Ejecutando salto no local #2 \n");
     siglongjmp(salto_sigusr1, 1);
 }
-void handler_sigusr2(int signal)
+void handler_sigusr2(int)
 {
     printf("\n[ SIGUSR2 recibida ]\n\n");
     printf(">>> Ejecutando salto no local #3 \n");
