@@ -1,65 +1,93 @@
-/*
- * PROGRAMA 2 - Laboratorio 03 (Sistemas Operativos)
- *
- * Comportamiento requerido:
- *   - Espera un mensaje de Programa 1 en la Cola de Mensajes #1, type = 3
- *   - Al recibirlo, lo reenvia a Programa 3 usando una Cola de Mensajes #2
- *     DISTINTA, con type = 4
- *
- * Ejecucion:  ./program2
- */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 #include <sys/types.h>
 #include <sys/ipc.h>
 #include <sys/msg.h>
+#include <unistd.h>
 
-#define MSGQ1_KEY   1234   /* Cola Programa1 -> Programa2 (type 3) */
-#define MSGQ2_KEY   5678   /* Cola Programa2 -> Programa3 (type 4) */
-#define MAXSIZE     128
+#define MAXSIZE 1024
 
-struct msgbuf {
+#define KEY_QUEUE1 1234
+#define KEY_QUEUE2 5678
+
+/* Estructura para las Message Queues */
+struct msgbuf
+{
     long mtype;
     char mtext[MAXSIZE];
 };
 
-static void die(const char *msg) {
-    perror(msg);
-    exit(1);
-}
+int main(void)
+{
+    int msqid1;
+    int msqid2;
 
-int main(void) {
-    int msqid1 = msgget(MSGQ1_KEY, IPC_CREAT | 0666);
-    if (msqid1 < 0) die("msgget (cola 1)");
+    struct msgbuf mensaje;
 
-    int msqid2 = msgget(MSGQ2_KEY, IPC_CREAT | 0666);
-    if (msqid2 < 0) die("msgget (cola 2)");
+    /*
+     * Conectarse a la primera Message Queue.
+     * Esta es la cola utilizada por Program 1 -> Program 2.
+     */
+    msqid1 = msgget(KEY_QUEUE1, IPC_CREAT | 0666);
 
-    printf("=== PROGRAMA 2 INICIADO (PID %d) ===\n", getpid());
-    printf("Esperando mensaje type = 3 en la cola %d...\n\n", msqid1);
+    if (msqid1 < 0)
+    {
+        perror("msgget queue 1");
+        exit(1);
+    }
 
-    struct msgbuf rbuf;
-    struct msgbuf sbuf;
+    /*
+     * Crear/conectarse a la segunda Message Queue.
+     * Esta será utilizada por Program 2 -> Program 3.
+     */
+    msqid2 = msgget(KEY_QUEUE2, IPC_CREAT | 0666);
 
-    while (1) {
-        /* El 3er parametro = 3 filtra especificamente el tipo de mensaje 3 */
-        if (msgrcv(msqid1, &rbuf, MAXSIZE, 3, 0) < 0) {
-            die("msgrcv");
+    if (msqid2 < 0)
+    {
+        perror("msgget queue 2");
+        exit(1);
+    }
+
+    printf("=== PROGRAM 2 INICIADO ===\n");
+    printf("PID del proceso: %d\n", getpid());
+    printf("Message Queue 1: %d\n", msqid1);
+    printf("Message Queue 2: %d\n\n", msqid2);
+
+    while (1)
+    {
+        /*
+         * Esperar un mensaje de tipo 3 proveniente
+         * de Program 1.
+         */
+        if (msgrcv(msqid1, &mensaje, MAXSIZE, 3, 0) < 0)
+        {
+            perror("msgrcv");
+            exit(1);
         }
-        printf("[Programa 2] Mensaje recibido -> type = 3, contenido: \"%s\"\n",
-               rbuf.mtext);
 
-        sbuf.mtype = 4;
-        snprintf(sbuf.mtext, MAXSIZE, "%s", rbuf.mtext);
+        printf("[Program 2] Mensaje recibido de Program 1\n");
+        printf("[Program 2] Tipo de mensaje: %ld\n",
+               mensaje.mtype);
+        printf("[Program 2] Contenido: \"%s\"\n",
+               mensaje.mtext);
 
-        if (msgsnd(msqid2, &sbuf, strlen(sbuf.mtext) + 1, 0) < 0) {
-            die("msgsnd");
+        /*
+         * Cambiar el tipo del mensaje a 4 antes
+         * de enviarlo a Program 3.
+         */
+        mensaje.mtype = 4;
+
+        if (msgsnd(msqid2, &mensaje,
+                   strlen(mensaje.mtext) + 1, 0) < 0)
+        {
+            perror("msgsnd");
+            exit(1);
         }
-        printf("[Programa 2] Mensaje reenviado -> type = 4, contenido: \"%s\"\n\n",
-               sbuf.mtext);
+
+        printf("[Program 2] Mensaje enviado a Program 3\n");
+        printf("[Program 2] Tipo de mensaje: %ld\n\n",
+               mensaje.mtype);
     }
 
     return 0;
