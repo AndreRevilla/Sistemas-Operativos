@@ -1,0 +1,12 @@
+make
+//despues de tener ambos archivos en una carpeta limpia
+sudo insmod chardev.ko
+sudo dmesg | tail -n 3
+//para tener el numero de 3 digitos
+sudo mknod /dev/chardev c XXX 0
+sudo chmod 666 /dev/chardev
+//se reemplaza el XXX por el numero generado anteriormente
+echo "Prueba de escritura" > /dev/chardev
+//se escribe
+cat /dev/chardev
+//se lee
