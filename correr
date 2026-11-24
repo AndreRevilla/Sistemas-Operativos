@@ -10,3 +10,6 @@ echo "Prueba de escritura" > /dev/chardev
 //se escribe
 cat /dev/chardev
 //se lee
+gcc p1.c -o p1.exe -lrt -lpthread
+gcc p2.c -o p2.exe -lrt -lpthread
+gcc p3.c -o p3.exe -lrt -lpthread
